@@ -36,7 +36,8 @@ function plot_geometry_2D(geometry::Geometry, view::Box, dim::Int64)
         end
         #push!(colors, RGBA(rand(),rand(),rand(),1.0) )
     end
-    gradient = cgrad(colors)
+    #gradient = cgrad(colors)
+    gradient = cgrad(:tab10, categorical=true)
     heatmap(x_coords,y_coords,pixels,aspect_ratio=1, color=gradient, leg=false)
 end
 
