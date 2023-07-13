@@ -76,3 +76,49 @@ function find_cell_id(p::Coord, geometry::Geometry)
     end
     return -1
 end
+
+"""
+    subdivide_cell(cell::Cell, rmeshes::Int64, θmeshes::Int64, zmeshes::Int64)
+
+Creates a set of new cells by splitting a given cell into given numbers of equally spaced radial, angular, and axial subdivisions.
+
+# Arguments
+* `cell::Cell`: the geometry we want to plot
+* `rmeshes::Int64`: The view box is an axis aligned box that defines where the picture will be taken, with both min and max z dimensions indicating the single z elevation the slice is taken at.
+* `θmeshes::Int64`: The dimension is the number of pixels along the x and y axis to use, which determines the resolution of the picture.
+* `zmeshes::Int64`: The index of the cell we wish to view
+"""
+function subdivide_cell(cell::Cell, rmeshes::Int64, θmeshes::Int64, zmeshes::Int64)
+	@assert θmeshes % 2 == 0
+	n_planes = Int64(θmeshes//2)
+	angles = [i*pi/n_planes for i in 0:(n_planes-1)]
+
+	θplanes = [Plane(Coord(0.0,0.0,0.0), Coord(cos(θ), sin(θ), 0.0)) for θ in angles]
+
+	new_cells = Cell[]
+
+	for i in eachindex(θplanes)
+		if i == length(θplanes)
+			plane1 = θplanes[i]
+			plane2 = θplanes[1]
+		else
+			plane1 = θplanes[i]
+			plane2 = θplanes[i+1]
+		end
+
+		plane1_ind = length(cell.regions) + 1
+		plane2_ind = plane1_ind + 1
+
+		#case 1: + plane1 ^ - plane2
+		new_regions = push!(deepcopy(cell.regions), Region(plane1, +1), Region(plane2, -1))
+		new_cell1 = Cell(new_regions, :(($(cell.definition) ^ $plane1_ind) ^ $plane2_ind))
+
+		#case 2: - plane1 ^ +plane2
+		new_regions = push!(deepcopy(cell.regions), Region(plane1, -1), Region(plane2, +1))
+		new_cell2 = Cell(new_regions, :(($(cell.definition) ^ $plane1_ind) ^ $plane2_ind))
+
+		push!(new_cells, new_cell1, new_cell2)
+	end
+
+	return new_cells
+end

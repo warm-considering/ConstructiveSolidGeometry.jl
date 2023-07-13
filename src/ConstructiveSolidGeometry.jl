@@ -23,6 +23,7 @@ export reflect
 export generate_random_ray
 export raytrace
 export find_intersection
+export subdivide_cell
 export halfspace
 export is_in_cell
 export find_cell_id
